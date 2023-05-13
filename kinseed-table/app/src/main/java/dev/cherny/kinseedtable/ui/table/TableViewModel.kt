@@ -9,6 +9,7 @@ import dev.cherny.kinseedtable.ui.card.Card
 class TableViewModel: ViewModel() {
     var cards by mutableStateOf<List<Card>>(emptyList())
         private set
+    var filtersState by mutableStateOf<FiltersState>(mapOf(Pair("1", "test1"), Pair("22222222", "test2")))
 
     fun start() {
         cards = listOf(
@@ -57,5 +58,11 @@ class TableViewModel: ViewModel() {
                 email = "email2",
             )
         )
+    }
+
+    fun filterUpdated(key: String, value: String) {
+        val filtersStateCopy = filtersState.toMutableMap()
+        filtersStateCopy[key] = value
+        filtersState = filtersStateCopy.toMap()
     }
 }
