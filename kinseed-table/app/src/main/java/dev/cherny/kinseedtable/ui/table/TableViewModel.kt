@@ -11,7 +11,6 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.io.BufferedReader
 
-
 data class Person(
     val id: String,
     val firstName: String,
@@ -27,7 +26,20 @@ data class Person(
 class TableViewModel: ViewModel() {
     var cards by mutableStateOf<List<Card>>(emptyList())
         private set
-    var filtersState by mutableStateOf<FiltersState>(mapOf(Pair("1", "test1"), Pair("22222222", "test2")))
+    var filtersState by mutableStateOf<FiltersState>(
+        mapOf(
+            Pair("ID", ""),
+            Pair("First Name", ""),
+            Pair("Last Name", ""),
+            Pair("Company", ""),
+            Pair("Status", ""),
+            Pair("Fixed-Line Phone", ""),
+            Pair("Mobile Phone", ""),
+            Pair("E-mail", ""),
+        )
+    )
+
+    private var people: List<Person> = emptyList()
 
     lateinit var assetManager: AssetManager
 
@@ -39,6 +51,34 @@ class TableViewModel: ViewModel() {
         val filtersStateCopy = filtersState.toMutableMap()
         filtersStateCopy[key] = value
         filtersState = filtersStateCopy.toMap()
+
+        filterData()
+    }
+
+    private fun filterData() {
+        val activeFilters = filtersState.filter {
+            return@filter it.value.isNotEmpty()
+        }
+        var filteredPeople = people.filter {
+            var result = true
+            for ((key, value) in activeFilters) {
+                result = when(key) {
+                    "ID" -> result && it.id.contains(value)
+                    "First Name" -> result && it.firstName.contains(value)
+                    "Last Name" -> result && it.lastName.contains(value)
+                    "Company" -> result && it.company.contains(value)
+                    "Status" -> result && it.status.contains(value)
+                    "Fixed-Line Phone" -> result && it.fixedLinePhone.contains(value)
+                    "Mobile Phone" -> result && it.mobilePhone?.contains(value) ?: false
+                    "E-mail" -> result && it.email?.contains(value) ?: false
+                    else -> result
+                }
+            }
+
+            return@filter result
+        }
+
+        cards = filteredPeople.map(CardMapper::map)
     }
 
     private fun parseData() {
@@ -74,20 +114,26 @@ class TableViewModel: ViewModel() {
                 ))
             }
 
-            cards = result.map {
-                return@map Card(
-                    id = it.id,
-                    name = "${it.firstName} ${it.lastName}",
-                    createdDate = "",
-                    company = it.company,
-                    status = it.status,
-                    fixedLinePhone = it.fixedLinePhone,
-                    mobilePhone = it.mobilePhone,
-                    email = it.email,
-                )
-            }
+            people = result
+
+            cards = people.map(CardMapper::map)
         } catch (e: JSONException) {
             Log.e("Json", e.toString())
+        }
+    }
+
+    object CardMapper {
+        fun map(person: Person): Card {
+            return Card(
+                id = person.id,
+                name = "${person.firstName} ${person.lastName}",
+                createdDate = person.createdDate,
+                company = person.company,
+                status = person.status,
+                fixedLinePhone = person.fixedLinePhone,
+                mobilePhone = person.mobilePhone,
+                email = person.email,
+            )
         }
     }
 }
