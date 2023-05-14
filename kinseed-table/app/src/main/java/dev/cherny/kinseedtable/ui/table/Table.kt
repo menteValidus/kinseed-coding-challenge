@@ -107,8 +107,7 @@ private fun Filters(
 fun Table_Preview() {
     val card = Card(
         id = "id",
-        firstName = "firstName",
-        lastName = "lastName",
+        name = "name",
         createdDate = "createdDate",
         company = "company",
         status = "status",
