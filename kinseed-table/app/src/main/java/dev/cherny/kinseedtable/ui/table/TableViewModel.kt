@@ -38,6 +38,8 @@ class TableViewModel: ViewModel() {
             Pair("E-mail", ""),
         )
     )
+    var filterVisible by mutableStateOf(false)
+        private set
 
     private var people: List<Person> = emptyList()
 
@@ -53,6 +55,10 @@ class TableViewModel: ViewModel() {
         filtersState = filtersStateCopy.toMap()
 
         filterData()
+    }
+
+    fun switchFilterVisibility() {
+        filterVisible = !filterVisible
     }
 
     private fun filterData() {

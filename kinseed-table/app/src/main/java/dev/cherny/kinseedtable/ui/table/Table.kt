@@ -1,22 +1,22 @@
 package dev.cherny.kinseedtable.ui.table
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -27,11 +27,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.cherny.kinseedtable.ui.card.Card
 import dev.cherny.kinseedtable.ui.theme.KinseedTableTheme
+import kotlinx.coroutines.launch
 
 @Composable
-fun Table(viewModel: TableViewModel) {
+fun Table(modifier: Modifier = Modifier, viewModel: TableViewModel) {
     TableImpl(
+        modifier = modifier,
         cards = viewModel.cards,
+        isFiltersVisible = viewModel.filterVisible,
         filtersState = viewModel.filtersState,
         filterUpdated = viewModel::filterUpdated
     )
@@ -39,19 +42,35 @@ fun Table(viewModel: TableViewModel) {
 
 @Composable
 private fun TableImpl(
+    modifier: Modifier = Modifier,
     cards: List<Card>,
+    isFiltersVisible: Boolean,
     filtersState: FiltersState,
     filterUpdated: (String, String) -> Unit
 ) {
-    LazyColumn(modifier = Modifier
-        .background(MaterialTheme.colorScheme.secondary)
-        .padding(12.dp)) {
-        item {
-            Filters(
-                modifier = Modifier.padding(bottom = 12.dp),
-                filtersState = filtersState,
-                filterUpdated = filterUpdated,
-            )
+    val lazyListState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(isFiltersVisible) {
+        coroutineScope.launch {
+            lazyListState.animateScrollToItem(0)
+        }
+    }
+
+    LazyColumn(
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.secondary)
+            .padding(12.dp),
+        state = lazyListState
+    ) {
+        if (isFiltersVisible) {
+            item {
+                Filters(
+                    modifier = Modifier.padding(bottom = 12.dp),
+                    filtersState = filtersState,
+                    filterUpdated = filterUpdated,
+                )
+            }
         }
 
         for (card in cards) {
@@ -128,7 +147,8 @@ fun Table_Preview() {
 
     KinseedTableTheme {
         TableImpl(
-            listOf(card, card, card),
+            cards = listOf(card, card, card),
+            isFiltersVisible = true,
             filtersState = mutableMapOf(Pair("test", "value")),
             filterUpdated = { _, _ -> }
         )
